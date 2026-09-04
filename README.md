@@ -1,8 +1,10 @@
-# Revenue Recovery
+# 💳 Revenue Recovery
 
-AI-powered payment failure detection and controlled revenue recovery system.
+**AI-powered payment failure detection and controlled revenue recovery system.**
 
 Built for the **Razorpay AI Revenue Recovery Buildathon**.
+
+---
 
 ## 🚨 Problem
 
@@ -16,7 +18,9 @@ When a payment provider or payment method starts degrading, blindly retrying fai
 - Recover the wrong payments at the wrong time
 - Make it difficult to understand why a recovery decision was made
 
-Revenue recovery therefore needs to combine **failure detection, revenue-risk analysis, intelligent diagnosis, and controlled execution**.
+Revenue recovery therefore needs to combine **failure detection, revenue-risk analysis, intelligent diagnosis, and controlled execution.**
+
+---
 
 ## 💡 Solution
 
@@ -35,14 +39,16 @@ When an incident is detected:
 9. Eligible failed payments are recovered through a controlled simulation.
 10. The complete decision and recovery history is stored for auditability.
 
-### Core Principle
-
+> ### 🧭 Core Principle
+>
 > **AI provides intelligence; deterministic policy provides control.**
+> The AI agent never directly executes financial actions.
 
-The AI agent never directly executes financial actions.
+---
 
 ## 🏗️ Architecture
 
+```
                     Payment Events
                          │
                          ▼
@@ -66,7 +72,7 @@ The AI agent never directly executes financial actions.
                          ▼
               ┌─────────────────────┐
               │      AI Agent       │
-              │      Gemini         │
+              │      (Gemini)       │
               │                     │
               │ • Provider Health   │
               │ • Failure Patterns  │
@@ -96,110 +102,115 @@ The AI agent never directly executes financial actions.
                 │
                 ▼
              Escalated
+```
 
+**Application stack flow:**
 
-            Frontend
-            React
-            │
-            ▼
-            Node.js / Express API
-            │
-            ▼
-            MongoDB
+```
+Frontend (React)
+      │
+      ▼
+Node.js / Express API
+      │
+      ▼
+MongoDB
+```
 
-Three-Layer Design
+### 🧩 Three-Layer Design
 
 The system is intentionally separated into three major layers:
 
-1. Intelligence
+| Layer               | Responsibility                                                                                |
+| ------------------- | --------------------------------------------------------------------------------------------- |
+| **1. Intelligence** | The AI agent investigates the incident using provider health and failure-pattern data.        |
+| **2. Control**      | The deterministic policy engine validates whether the recommended action is safe and allowed. |
+| **3. Execution**    | The recovery engine performs only policy-approved recovery actions.                           |
 
-The AI agent investigates the incident using provider health and failure-pattern data.
-
-2. Control
-
-The deterministic policy engine validates whether the recommended action is safe and allowed.
-
-3. Execution
-
-The recovery engine performs only policy-approved recovery actions.
+---
 
 ## 🤖 AI Agent
 
-The system uses a Gemini-powered AI agent to investigate payment incidents and recommend an appropriate operational action.
+The system uses a **Gemini-powered AI agent** to investigate payment incidents and recommend an appropriate operational action.
 
 The agent has access to two controlled tools:
 
-- `getProviderHealth` — checks the current health of the affected provider and payment method.
-- `getFailurePatterns` — analyzes recent failure reasons and patterns.
+- **`getProviderHealth`** — checks the current health of the affected provider and payment method.
+- **`getFailurePatterns`** — analyzes recent failure reasons and patterns.
 
-The agent follows an investigation-first approach:
+### Investigation Flow
 
+```
 Incident
-│
-▼
+   │
+   ▼
 Investigate Provider Health
-│
-▼
+   │
+   ▼
 Investigate Failure Patterns
-│
-▼
+   │
+   ▼
 Diagnose Incident
-│
-▼
+   │
+   ▼
 Recommend Action
+```
 
-Possible recommendations are:
+### Possible Recommendations
 
-> pause_recovery
-> resume_recovery
-> monitor
-> escalate
+| Recommendation    | Meaning                            |
+| ----------------- | ---------------------------------- |
+| `pause_recovery`  | Halt recovery attempts immediately |
+| `resume_recovery` | Recovery is safe to continue       |
+| `monitor`         | Keep watching, no action yet       |
+| `escalate`        | Requires human/manual review       |
 
-The AI agent does not directly execute recovery actions or financial transactions.
+> ⚠️ The AI agent **does not** directly execute recovery actions or financial transactions.
 
-🛡️ Deterministic Safety Layer
+---
 
-AI recommendations are passed through a deterministic policy engine before any recovery action is allowed.
+## 🛡️ Deterministic Safety Layer
+
+AI recommendations are passed through a **deterministic policy engine** before any recovery action is allowed.
 
 The policy engine evaluates factors such as:
 
-AI confidence
-Current failure rate
-Baseline failure rate
-Degradation increase
-Provider health
-Availability of payment data
-Systemic degradation conditions
+- AI confidence
+- Current failure rate
+- Baseline failure rate
+- Degradation increase
+- Provider health
+- Availability of payment data
+- Systemic degradation conditions
 
-For example:
-
+```
 AI Recommendation
-│
-▼
-┌──────────────────────┐
-│ Policy Engine │
-│ │
-│ Confidence >= 0.7? │
-│ Provider healthy? │
-│ Degradation severe? │
-│ Payment data valid? │
-└──────────┬───────────┘
-│
-▼
-Allowed / Blocked
-│
-▼
-Recovery
+       │
+       ▼
+┌───────────────────────┐
+│    Policy Engine      │
+│                       │
+│  Confidence >= 0.7?   │
+│  Provider healthy?    │
+│  Degradation severe?  │
+│  Payment data valid?  │
+└──────────┬────────────┘
+           │
+           ▼
+    Allowed / Blocked
+           │
+           ▼
+       Recovery
+```
 
-This creates a clear separation between AI reasoning and financial control.
+This creates a clear separation between AI reasoning and financial control — **the AI can recommend an action, but deterministic business rules decide whether that action is allowed.**
 
-The AI can recommend an action, but deterministic business rules decide whether that action is allowed.
+---
 
 ## 💰 Revenue at Risk
 
 The system estimates revenue at risk from payment failures within a rolling time window.
 
-The calculation:
+**Calculation steps:**
 
 1. Groups events by payment.
 2. Identifies failed payments.
@@ -207,32 +218,32 @@ The calculation:
 4. Calculates the excess failed payment value.
 5. Uses that excess value as the estimated revenue at risk.
 
-The system uses a **5% baseline failure rate** for the current simulation.
+> The system uses a **5% baseline failure rate** for the current simulation.
 
 This helps prioritize incidents based on their potential financial impact rather than treating every failure equally.
 
+---
+
 ## 🔒 Recovery Guardrails
 
-Recovery is intentionally conservative.
+Recovery is intentionally conservative. Key safeguards include:
 
-Key safeguards include:
-
-- Recovery is paused when provider health is degraded or insufficient.
-- Recovery can become active only after the provider is healthy.
-- Low-confidence AI decisions are escalated instead of executed.
-- Systemic degradation can block automated recovery.
-- Each payment has a maximum retry limit.
-- Recovery is executed only for eligible failed payments.
-- Recovery actions are recorded as `RecoveryAttempt` records.
-- The recovery engine currently operates as a simulation and does not charge real customers.
+- ✅ Recovery is paused when provider health is degraded or insufficient.
+- ✅ Recovery can become active only after the provider is healthy.
+- ✅ Low-confidence AI decisions are escalated instead of executed.
+- ✅ Systemic degradation can block automated recovery.
+- ✅ Each payment has a maximum retry limit.
+- ✅ Recovery is executed only for eligible failed payments.
+- ✅ Recovery actions are recorded as `RecoveryAttempt` records.
+- ✅ The recovery engine currently operates as a **simulation** and does not charge real customers.
 
 These controls prevent the system from blindly retrying payments during an active provider incident.
 
+---
+
 ## 📋 Audit Trail
 
-Important decisions and state changes are persisted in MongoDB.
-
-The system maintains records for:
+Important decisions and state changes are persisted in **MongoDB**. The system maintains records for:
 
 - Payment events
 - Incidents
@@ -241,43 +252,25 @@ The system maintains records for:
 - Recovery attempts
 - Payment state transitions
 
-This provides visibility into **what happened, why a decision was made, and what recovery action was taken**.
+This provides visibility into **what happened, why a decision was made, and what recovery action was taken.**
+
+---
 
 ## 🧰 Tech Stack
 
-### Frontend
+| Category         | Technologies                                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------- |
+| **Frontend**     | React, React Router, Vite, CSS                                                                          |
+| **Backend**      | Node.js, Express.js, REST APIs                                                                          |
+| **Database**     | MongoDB, Mongoose                                                                                       |
+| **AI**           | Google Gemini, `@google/genai`                                                                          |
+| **Architecture** | MERN stack, service-oriented backend, deterministic policy layer, event-driven payment failure analysis |
 
-- React
-- React Router
-- Vite
-- CSS
-
-### Backend
-
-- Node.js
-- Express.js
-- REST APIs
-
-### Database
-
-- MongoDB
-- Mongoose
-
-### AI
-
-- Google Gemini
-- `@google/genai`
-
-### Architecture
-
-- MERN stack
-- Service-oriented backend structure
-- Deterministic policy layer
-- Event-driven payment failure analysis
+---
 
 ## 📁 Project Structure
 
-````text
+```text
 revenue-recovery/
 │
 ├── client/
@@ -313,6 +306,9 @@ revenue-recovery/
 │   └── package.json
 │
 └── README.md
+```
+
+---
 
 ## 🚀 Running Locally
 
@@ -329,38 +325,55 @@ Make sure you have:
 ```bash
 git clone https://github.com/Nihar-tech-21/razorpay-revenue-recovery.git
 cd razorpay-revenue-recovery
+```
 
 ### 2. Install backend dependencies
+
+```bash
 cd server
 npm install
+```
 
-Create a .env file:
+Create a `.env` file:
 
+```env
 MONGO_URI=your_mongodb_connection_string
 GEMINI_API_KEY=your_gemini_api_key
 PORT=5000
+```
 
 Start the backend:
 
+```bash
 npm run dev
+```
+
 ### 3. Install frontend dependencies
 
 Open another terminal:
 
+```bash
 cd client
 npm install
+```
 
-Create a .env file:
+Create a `.env` file:
 
+```env
 VITE_API_URL=http://localhost:5000/api
+```
 
 Start the frontend:
 
+```bash
 npm run dev
+```
 
 The application will be available at the local Vite URL shown in the terminal.
 
-Never commit .env files or API keys to the repository. Use the provided .env.example files as templates.
+> 🔐 **Never commit `.env` files or API keys to the repository.** Use the provided `.env.example` files as templates.
+
+---
 
 ## 🎬 Demo Scenario
 
@@ -397,30 +410,33 @@ Eligible Payments Recovered
       │
       ▼
 Incident Resolved
+```
 
 The backend includes test-data and demo utilities for reproducing these scenarios without relying on real customer transactions.
 
-⚠️ Simulation Disclaimer
+---
 
-This project is a buildathon prototype and simulation.
+## ⚠️ Simulation Disclaimer
 
-The recovery engine does not perform real payment retries or charge real customers.
+This project is a **buildathon prototype and simulation**.
+
+The recovery engine does **not** perform real payment retries or charge real customers.
 
 Payment recovery is simulated by:
 
-> Selecting eligible failed payments
-> Creating a recovery attempt
-> Simulating a successful recovery
-> Updating the payment state
-> Recording the corresponding payment event
+1. Selecting eligible failed payments
+2. Creating a recovery attempt
+3. Simulating a successful recovery
+4. Updating the payment state
+5. Recording the corresponding payment event
 
 A production implementation would require integration with actual payment providers along with appropriate authentication, idempotency, consent, reconciliation, monitoring, and compliance controls.
 
+---
+
 ## 🧠 Design Philosophy
 
-Revenue recovery should not be treated as a simple retry mechanism.
-
-The system is designed around four principles:
+Revenue recovery should not be treated as a simple retry mechanism. The system is designed around four principles:
 
 1. **Detect before acting**
    Understand whether failures are isolated or systemic.
@@ -434,13 +450,13 @@ The system is designed around four principles:
 4. **Recover only when safe**
    Stop automated recovery during provider degradation and resume only after health is restored.
 
-This approach aims to make revenue recovery **intelligent, controlled, explainable, and auditable**.
+This approach aims to make revenue recovery **intelligent, controlled, explainable, and auditable.**
+
+---
 
 ## 👩‍💻 Author
 
 **Niharika Dhaka**
-
 B.Tech Computer Science Engineering
 
 Built as part of the **Razorpay AI Revenue Recovery Buildathon**.
-````
